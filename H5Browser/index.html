@@ -1,0 +1,60 @@
+<!doctype html>
+<html class="no-js" lang="">
+
+<head>
+  <meta charset="utf-8">
+  <title>WEBGL</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="stylesheet" href="css/foundation.css">
+  <!-- Place favicon.ico in the root directory -->
+
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/main.css">
+
+  <meta name="theme-color" content="#fafafa">
+</head>
+
+<body>
+
+  <!-- Add your site or application content here -->
+  <script src="js/vendor/modernizr-3.7.1.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+  <script>window.jQuery || document.write('<script src="js/vendor/jquery-3.4.1.min.js"><\/script>')</script>
+  <script src="js/vendor/foundation.js"></script>
+  <script src="js/plugins.js"></script>
+
+  <script>
+    $(document).ready(function() {
+      $(document).foundation();
+    })
+  </script>
+
+  <div>
+    <button id="HelloWorld_1" type="button" class="button">简单三角形</button>
+    <button id="HelloWorld_2" type="button" class="button">左上角原点，简单三角形</button>
+    <button id="HelloWorld_3" type="button" class="button">简单矩形</button>
+    <button id="HelloWorld_4" type="button" class="button">随机生成50个矩形</button>
+    <button id="MoveRect" type="button" class="button">移动矩形</button>
+    <button id="MoveTank" type="button" class="button">移动坦克</button>
+    <button id="RotateTank" type="button" class="button">旋转+移动坦克</button>
+    <button id="ScaleTank" type="button" class="button">旋转+移动+缩放坦克</button>
+    <button id="Math2DTransform" type="button" class="button">用矩阵计算改变坦克的位置，旋转和缩放</button>
+  </div>
+
+  <div>
+    <button id="TextureShow" type="button" class="button success">显示2D图片</button>
+  </div>
+
+  <div>
+    <button id="Rect3D" type="button" class="button warning">3D矩形变化</button>
+    <button id="PerspectiveRect" type="button" class="button warning">透视矩形</button>
+  </div>
+
+  <script src="js/index.js"></script>
+</body>
+
+</html>
