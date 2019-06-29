@@ -6,8 +6,6 @@ webGL -> 光栅化引擎 -> 提供API -> 写入指令，按照指令输出\画�
 
 ## 基础流程 && 简单三角形
 1.在html中定义一个canvas，canvas.getContext(不同的浏览器接口会不同，这里以谷歌浏览器为例子) -> 获取所需要的环境 2d\webgl
-
-
 ```html
 <canvas id="c" width="400" height="400"></canvas>
 ```
@@ -204,3 +202,96 @@ gl.uniform2f(uResolution, gl.canvas.width, gl.canvas.height);
 ```
 [坐标轴转换](https://eyjanchen.github.io/webGLLeaning/H5Browser/js/modules/HelloWorld_2.html)
 ***
+## 矩形 && 颜色
+
+1.在webGL中最简单的元素是三角形，如果想要画一个矩形，矩形 = 三角形 * 2，其实就是画两个一样的三角形只是顶点的位置不一样
+
+2.颜色的控制，片段着色器主要就是控制像素，颜色，在片段着色器中有一个必须要赋值的变量是gl_FragColor，在顶点着色器中一定要赋值的是gl_Position，片段着色器的简单定义
+```js
+// 固定的颜色
+let fs =
+    'precision mediump float;' + // 定义浮点数的精度
+    'void main() {' +
+    '  gl_FragColor = vec4(1, 0, 0.5, 1);' +
+    '}';
+// 通过赋值操作
+let fsColor =
+    'precision mediump float;' +
+    'uniform vec4 u_color;' +
+    'void main() {' +
+    '  gl_FragColor = u_color;' +
+    '}';
+```
+
+`precision mediump float`一定要有申明这一句话，这句话的作用是确定浮点数的精度 highp\mediump\lowp,因为不同的设备对浮点数的处理支持不同
+
+3.在光栅化的时候，每一个像素都会调用一次片段着色器，如上面的gl_FragColor是通过全局变量设置的，每次都一样
+
+4.从外部设置颜色
+```js
+let uColor = gl.getUniformLocation(program, 'u_color');
+gl.uniform4f(uColor, Math.random(), Math.random(), Math.random(), 1);
+```
+[矩形，每次刷新不同的颜色](https://eyjanchen.github.io/webGLLeaning/H5Browser/js/modules/HelloWorld_3.html)
+[绘制50个不同大小和颜色的矩形](https://eyjanchen.github.io/webGLLeaning/H5Browser/js/modules/HelloWorld_4.html)
+***
+##基本位移
+
+1.原理：每次移动的时候重新绘制一次，实质上就是重新确定点的位置
+```js
+getPosArr() {
+    let x1= this._posX || 0;
+    let y1 = this._posY || 0;
+    let x2 = 100 + x1;
+    let y2 = 30 + y1;
+    return new Float32Array([
+      x1, y1,
+      x2, y1,
+      x1, y2,
+      x1, y2,
+      x2, y1,
+      x2, y2,
+    ]);
+}
+// 当this._posX或者this._posY变化的时候就重现执行渲染，将新的点重新写入 -> gl.bindData
+```
+
+[简单矩形位移](https://eyjanchen.github.io/webGLLeaning/H5Browser/js/modules/MoveRect.html)
+***
+##坦克移动 -> 移动方式通过控制顶点着色器变量完成
+
+1.平移的原理其实就是一个点O(x, y)加上一个增量A(Xa, Ya) => 最后的点(x + Xa, y + Ya),在顶点着色器中已经定义了a_position，这个也就是图像的点的集合，那么每个点加上增量，最后得出的就是最终位置的a_position
+```typeScript
+let vsTranslation =
+    'attribute vec2 a_position;' +
+    'uniform vec2 u_resolution;' +
+    'uniform vec2 u_translation;' + // 移动增量
+    'void main() {' +
+    ' vec2 position = a_position + u_translation;' + // 本身的位置 + 移动增量 = 最终移动过后的结果
+    ' vec2 zeroToOne = position / u_resolution;' + // 以下是坐标轴的转换
+    ' vec2 zeroToTwo = zeroToOne * 2.0;' +
+    ' vec2 clip = zeroToTwo - 1.0;' +
+    ' gl_Position = vec4(clip * vec2(1, -1), 0, 1);'  +
+    '}';
+```
+
+2.在上层，控制program的时候，实际上只需要改变u_translation的值即可
+```typescript
+changeTranslation() {
+    if (this._program) {
+      let u_Translation = this._gl.getUniformLocation(this._program, 'u_translation');
+      this._gl.uniform2f(u_Translation, this._posX, this._posY);
+      // 这里需要重现设置一下背景颜色，不然就会变成白色透明
+      this._gl.clearColor(0, 0, 0, 1);
+      this._gl.clear(this._gl.COLOR_BUFFER_BIT);
+      // 直接重新绘制即可
+      this._gl.drawArrays(this._gl.TRIANGLES, 0, 12);
+    }
+}
+```
+
+重现绘制的时候只是改变了translation以及执行重绘，没有必要重新绑定，开启，重新赋值新的顶点，因为初始的顶点不用变，只需要初始顶点加上位移增量就可以算出最终结果，绑定过一次的数据依旧是保留在内部，除非是需要再次改变，如果是再次改变就重新执行绑定，赋值等后续的操作
+
+[坦克移动](https://eyjanchen.github.io/webGLLeaning/H5Browser/js/modules/MoveTank.html)
+***
+

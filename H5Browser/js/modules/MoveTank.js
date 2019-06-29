@@ -15,7 +15,6 @@ class MoveTank {
   initKBEvent() {
     let self = this;
     document.onkeydown = function (e) {
-      console.log(e);
       let isChange = true;
       if (e.key === 'a') {
         if (self._posX > 0) {
@@ -38,7 +37,7 @@ class MoveTank {
       }
 
       if (isChange) {
-        self.run();
+        self.changeTranslation();
       }
     }
   }
@@ -70,6 +69,7 @@ class MoveTank {
       return;
     }
     this._gl.useProgram(program);
+    this._program = program;
 
     this._gl.viewport(0,0,this._gl.canvas.width, this._gl.canvas.height);
     this._gl.clearColor(0, 0, 0, 1);
@@ -88,6 +88,18 @@ class MoveTank {
     this._gl.enableVertexAttribArray(this.getAPosition(program));
     this._gl.vertexAttribPointer(this.getAPosition(program), 2, this._gl.FLOAT, false, 0, 0);
     this._gl.drawArrays(this._gl.TRIANGLES, 0, 12);
+  }
+
+  changeTranslation() {
+    if (this._program) {
+      let u_Translation = this._gl.getUniformLocation(this._program, 'u_translation');
+      this._gl.uniform2f(u_Translation, this._posX, this._posY);
+
+      this._gl.clearColor(0, 0, 0, 1);
+      this._gl.clear(this._gl.COLOR_BUFFER_BIT);
+
+      this._gl.drawArrays(this._gl.TRIANGLES, 0, 12);
+    }
   }
 
   getAPosition(program) {
