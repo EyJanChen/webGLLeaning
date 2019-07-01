@@ -93,6 +93,16 @@ let ShaderStr = (function () {
     ' v_color = a_color;' +
     '}';
 
+  let vs3DTexture =
+    'attribute vec4 a_position;' +
+    'uniform mat4 u_matrix;' +
+    'attribute vec2 a_texcoord;' +
+    'varying vec2 v_texcoord;' +
+    'void main() {' +
+    ' gl_Position = u_matrix * a_position;' + // 这里不能反过来
+    ' v_texcoord = a_texcoord;' +
+    '}';
+
   let fs =
     'precision mediump float;' + // 定义浮点数的精度
     'void main() {' +
@@ -119,6 +129,14 @@ let ShaderStr = (function () {
     'varying vec4 v_color;' +
     'void main() {' +
     ' gl_FragColor = v_color;' +
+    '}';
+
+  let fs3DTexture =
+    'precision mediump float;' +
+    'varying vec2 v_texcoord;' +
+    'uniform sampler2D u_texture;' +
+    'void main() {' +
+    ' gl_FragColor = texture2D(u_texture, v_texcoord);' +
     '}';
 
   __proto.getShaderSource = function (index) {
@@ -159,6 +177,10 @@ let ShaderStr = (function () {
         return [vs3D, fsColorSingle];
       }
 
+      case ShaderStr.INDEX_SHADER_3D_TEXTURE: {
+        return [vs3DTexture, fs3DTexture];
+      }
+
       default: {
         return [];
       }
@@ -176,6 +198,7 @@ let ShaderStr = (function () {
   ShaderStr.INDEX_SHADER_MATH = 8; // 通过矩阵运算变化
 
   ShaderStr.INDEX_SHADER_3D = 9;
+  ShaderStr.INDEX_SHADER_3D_TEXTURE = 10; // 3D纹理
 
   return ShaderStr;
 } ());

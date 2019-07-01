@@ -1,27 +1,23 @@
 class Index {
   constructor() {
-    this._arr = [
-      "HelloWorld_1",
-      "HelloWorld_2",
-      "HelloWorld_3",
-      "HelloWorld_4",
-      "MoveRect",
-      "MoveTank",
-      "RotateTank",
-      "ScaleTank",
-      "Math2DTransform",
-
-      "TextureShow",
-
-      "Rect3D",
-      "PerspectiveRect",
-    ];
     this.init();
   }
 
   init() {
-    for (let index = 0, len = this._arr.length; index < len; index++) {
-      let name = this._arr[index];
+    let childArr = document.body.children;
+    for (let index = 0, len = childArr.length; index < len; index++) {
+      let child = childArr[index];
+      if (child.localName === 'div') {
+        this.addBtnClickEvent(child);
+      }
+    }
+  }
+
+  addBtnClickEvent(node) {
+    let childArr = node.children;
+    for (let index = 0, len = childArr.length; index < len; index++) {
+      let btn = childArr[index];
+      let name = btn.id;
       let idName = '#' + name;
       let windowOpenPath = "js/modules/" + name + ".html";
 
