@@ -142,43 +142,43 @@ let ShaderStr = (function () {
   __proto.getShaderSource = function (index) {
     switch (index) {
       case ShaderStr.INDEX_SHADER_TRIANGLES: {
-        return [vs, fs];
+        return ;
       }
 
       case ShaderStr.INDEX_SHADER_TRIANGLES_ZERO_POINT: {
-        return [vsViewConvert, fs];
+        return
       }
 
       case ShaderStr.INDEX_SHADER_SINGL_RECT_COLOR: {
-        return [vsViewConvert, fsColor];
+        return
       }
 
       case ShaderStr.INDEX_SHADER_TEXUER: {
-        return [vsTexture, fsTexture];
+        return ;
       }
 
       case ShaderStr.INDEX_SHADER_TRANSLATION_MOVE: {
-        return [vsTranslation, fsColor];
+        return ;
       }
 
       case ShaderStr.INDEX_SHADER_TRANSLATION_ROTATION: {
-        return [vsTranslationRotation, fsColor];
+        return ;
       }
 
       case ShaderStr.INDEX_SHADER_SCALE: {
-        return [vsScale, fsColor];
+        return ;
       }
 
       case ShaderStr.INDEX_SHADER_MATH: {
-        return [vsMath, fsColor];
+        return ;
       }
 
       case ShaderStr.INDEX_SHADER_3D: {
-        return [vs3D, fsColorSingle];
+        return ;
       }
 
       case ShaderStr.INDEX_SHADER_3D_TEXTURE: {
-        return [vs3DTexture, fs3DTexture];
+        return ;
       }
 
       default: {

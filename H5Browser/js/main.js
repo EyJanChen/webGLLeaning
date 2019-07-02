@@ -3,25 +3,10 @@ class Main {
   }
 
   getCvsGl() {
-    if (!Main.gl) {
-      let cvs = document.getElementById('c');
-      let gl = cvs.getContext('webgl');
-      if (!gl) {
-        console.error('gl err');
-      }
 
-      Main.gl = gl;
-    }
-
-    return Main.gl;
   }
 
-  getShaderClass() {
-    this._shaderClass = this._shaderClass || new ShaderClass();
-    return this._shaderClass;
-  }
-
-  getRectPosArr(x, y, w, h) {
+  static getRectPosArr(x, y, w, h) {
     let x1 = x;
     let x2 = w + x1;
     let y1 = y;
@@ -36,7 +21,7 @@ class Main {
     ];
   }
 
-  getRectPosFloatArr(x, y, w, h) {
+  static getRectPosFloatArr(x, y, w, h) {
     let arr = this.getRectPosArr(x, y, w, h);
     return new Float32Array(arr);
   }
