@@ -4,16 +4,15 @@ class PerspectiveRect {
   }
 
   init() {
-    this._gl = main.getCvsGl();
-    this._shaderClass = main.getShaderClass();
+    this._gl = DocumentUtil.getGL();
     this._transla = [-150, 0, -360];
-    this._rotate = [this.degToRad(190), this.degToRad(40), this.degToRad(320)];
+    this._rotate = [190, 40, 320];
     this._scale = [1, 1, 1];
     this._fieldOfView = 60;
     this.initKBEvent();
     this.initPosBuffer();
     this.initColorBuffer();
-    this.run();
+    this.initProgram();
   }
 
   static TRAN_KEY = ['a', 'd', 'w', 's', 'q', 'e'];
@@ -86,7 +85,7 @@ class PerspectiveRect {
 
     this._posBuffer = this._gl.createBuffer();
     this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._posBuffer);
-    this._gl.bufferData(this._gl.ARRAY_BUFFER, this.getRectPos(), this._gl.STATIC_DRAW);
+    this._gl.bufferData(this._gl.ARRAY_BUFFER, Tools.getRectArr(), this._gl.STATIC_DRAW);
   }
 
   initColorBuffer() {
@@ -96,22 +95,35 @@ class PerspectiveRect {
 
     this._colorBuffer = this._gl.createBuffer();
     this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._colorBuffer);
-    this._gl.bufferData(this._gl.ARRAY_BUFFER, this.getRectPointColor(), this._gl.STATIC_DRAW);
+    this._gl.bufferData(this._gl.ARRAY_BUFFER, Tools.getColorArr(), this._gl.STATIC_DRAW);
   }
 
-  run() {
-    if (!this._gl || !this._shaderClass) {
+  initProgram() {
+    if (!this._gl) {
       return;
     }
 
-    let program = this._shaderClass.getShaderProgram(this._gl, ShaderStr.INDEX_SHADER_3D);
+    ShaderUtil.loadShader(this._gl, ShaderUtil.INDEX_SHADER_3D, this.loadProgramSuccess.bind(this));
+  }
+
+  loadProgramSuccess(program) {
     if (!program) {
+      return;
+    }
+    this._gl.useProgram(program);
+    this._program = program;
+
+    this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
+    this.run();
+  }
+
+  run() {
+    if (!this._gl) {
       return;
     }
 
     let gl = this._gl;
 
-    gl.useProgram(program);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.clearColor(0, 0, 0, 1);
 
@@ -119,9 +131,9 @@ class PerspectiveRect {
     gl.enable(gl.DEPTH_TEST);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    let aPosition = gl.getAttribLocation(program, 'a_position');
-    let uMatrix = gl.getUniformLocation(program, 'u_matrix');
-    let aColor = gl.getAttribLocation(program, 'a_color');
+    let aPosition = gl.getAttribLocation(this._program, 'a_position');
+    let uMatrix = gl.getUniformLocation(this._program, 'u_matrix');
+    let aColor = gl.getAttribLocation(this._program, 'a_color');
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this._posBuffer);
     gl.enableVertexAttribArray(aPosition);
@@ -134,121 +146,15 @@ class PerspectiveRect {
     let aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
     let zNear = 1; // 正面切割位置
     let zFar = 2000; // 背面切割位置
-    let matrix = Math3D.perspective(this.degToRad(this._fieldOfView), aspect, zNear, zFar);
+    let matrix = Math3D.perspective(Tools.degToRad(this._fieldOfView), aspect, zNear, zFar);
     matrix = Math3D.translate(matrix, this._transla[0], this._transla[1], this._transla[2]);
-    matrix = Math3D.xRotate(matrix, this.degToRad(this._rotate[0]));
-    matrix = Math3D.yRotate(matrix, this.degToRad(this._rotate[1]));
-    matrix = Math3D.zRotate(matrix, this.degToRad(this._rotate[2]));
+    matrix = Math3D.xRotate(matrix, Tools.degToRad(this._rotate[0]));
+    matrix = Math3D.yRotate(matrix, Tools.degToRad(this._rotate[1]));
+    matrix = Math3D.zRotate(matrix, Tools.degToRad(this._rotate[2]));
     matrix = Math3D.scale(matrix, this._scale[0], this._scale[1], this._scale[2]);
     gl.uniformMatrix4fv(uMatrix, false, matrix);
 
-
     gl.drawArrays(gl.TRIANGLES, 0, 3 * 2 * 6);
-  }
-
-  degToRad(num) {
-    return num / Math.PI * 180;
-  }
-
-  getRectPos() {
-    let posArr = [
-      // 前
-      0,0,0,
-      0,50,0,
-      50,0,0,
-      50,0,0,
-      0,50,0,
-      50,50,0,
-
-      // 上
-      0,0,0,
-      0,0,50,
-      0,50,0,
-      0,0,50,
-      0,50,50,
-      0,50,0,
-
-      // 左
-      0,0,0,
-      50,0,50,
-      0,0,50,
-      0,0,0,
-      50,0,0,
-      50,0,50,
-
-
-      // 下
-      50,0,0,
-      50,0,50,
-      50,50,50,
-      50,0,0,
-      50,50,50,
-      50,50,0,
-
-      // 后
-      0,0,50,
-      0,50,50,
-      50,50,50,
-      0,0,50,
-      50,50,50,
-      50,0,50,
-
-      // 右
-      0,50,0,
-      0,50,50,
-      50,50,50,
-      0,50,0,
-      50,50,50,
-      50,50,0
-    ];
-    return new Float32Array(posArr);
-  }
-
-  getRectPointColor() {
-    let colorArr = [
-      255, 0, 0,
-      255, 0, 0,
-      255, 0, 0,
-      255, 0, 0,
-      255, 0, 0,
-      255, 0, 0,
-
-      0, 255, 0,
-      0, 255, 0,
-      0, 255, 0,
-      0, 255, 0,
-      0, 255, 0,
-      0, 255, 0,
-
-      0, 0, 255,
-      0, 0, 255,
-      0, 0, 255,
-      0, 0, 255,
-      0, 0, 255,
-      0, 0, 255,
-
-      255, 255, 0,
-      255, 255, 0,
-      255, 255, 0,
-      255, 255, 0,
-      255, 255, 0,
-      255, 255, 0,
-
-      0, 255, 255,
-      0, 255, 255,
-      0, 255, 255,
-      0, 255, 255,
-      0, 255, 255,
-      0, 255, 255,
-
-      255, 0, 255,
-      255, 0, 255,
-      255, 0, 255,
-      255, 0, 255,
-      255, 0, 255,
-      255, 0, 255
-    ];
-    return new Uint8Array(colorArr);
   }
 }
 

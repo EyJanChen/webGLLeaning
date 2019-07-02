@@ -4,13 +4,13 @@ class RotateTank {
   }
 
   init() {
-    this._gl = main.getCvsGl();
+    this._gl = DocumentUtil.getGL();
     this._color = [Math.random(), Math.random(), Math.random()];
     this._posY = this._posX = 0;
     this._angle = 0;
     this.initKBEvent();
     this.initPosBuffer();
-    this.run();
+    this.initProgram();
   }
 
   initKBEvent() {
@@ -79,17 +79,28 @@ class RotateTank {
   }
 
   getTankBuffer() {
-    let r1 = main.getRectPosArr(0, 20, 20, 10);
-    let r2 = main.getRectPosArr(5, 0, 10, 20);
+    let r1 = Tools.getRectPosArr(0, 20, 20, 10);
+    let r2 = Tools.getRectPosArr(5, 0, 10, 20);
     return new Float32Array(r1.concat(r2));
   }
 
-  onAngleChange() {
-    let slider = document.getElementById('angleSlider');
-    if (slider) {
-      this._angle = Number(slider.value);
-      this.run();
+  initProgram() {
+    if (!this._gl) {
+      return;
     }
+
+    ShaderUtil.loadShader(this._gl, ShaderUtil.INDEX_SHADER_TRANSLATION_ROTATION, this.loadProgramSuccess.bind(this));
+  }
+
+  loadProgramSuccess(program) {
+    if (!program) {
+      return;
+    }
+    this._gl.useProgram(program);
+    this._program = program;
+
+    this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
+    this.run();
   }
 
   run() {
@@ -97,38 +108,26 @@ class RotateTank {
       return;
     }
 
-    let shaderClass = main.getShaderClass();
-    if (!shaderClass) {
-      return;
-    }
 
-    let program = shaderClass.getShaderProgram(this._gl, ShaderStr.INDEX_SHADER_TRANSLATION_ROTATION);
-    if (!program) {
-      return;
-    }
-
-    this._gl.useProgram(program);
-
-    this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
     this._gl.clearColor(0, 0, 0, 1);
     this._gl.clear(this._gl.COLOR_BUFFER_BIT);
 
-    let uResolution = this._gl.getUniformLocation(program, 'u_resolution');
+    let uResolution = this._gl.getUniformLocation(this._program, 'u_resolution');
     this._gl.uniform2f(uResolution, this._gl.canvas.width, this._gl.canvas.height);
 
-    let uColor = this._gl.getUniformLocation(program, 'u_color');
+    let uColor = this._gl.getUniformLocation(this._program, 'u_color');
     this._gl.uniform4f(uColor, this._color[0], this._color[1], this._color[2], 1);
 
-    let uTranslation = this._gl.getUniformLocation(program, 'u_translation');
+    let uTranslation = this._gl.getUniformLocation(this._program, 'u_translation');
     this._gl.uniform2f(uTranslation, this._posX || 0, this._posY || 0);
 
-    let uRotation = this._gl.getUniformLocation(program, 'u_rotation');
+    let uRotation = this._gl.getUniformLocation(this._program, 'u_rotation');
     let angleInRadians = (this._angle || 0) * Math.PI / 180;
     let s = Math.sin(angleInRadians);
     let c = Math.cos(angleInRadians);
     this._gl.uniform2f(uRotation, s, c);
 
-    let aPosition = this._gl.getAttribLocation(program, 'a_position');
+    let aPosition = this._gl.getAttribLocation(this._program, 'a_position');
     this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._posBuffer);
     this._gl.enableVertexAttribArray(aPosition);
     this._gl.vertexAttribPointer(aPosition, 2, this._gl.FLOAT, false, 0, 0);

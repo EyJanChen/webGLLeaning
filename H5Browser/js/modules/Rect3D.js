@@ -9,9 +9,9 @@ class Rect3D {
     this._transla = [0, 0, 0];
     this._rotate = [0, 0, 0];
     this._scale = [1, 1, 1];
-    this._gl = main.getCvsGl();
-    this._shaderClass = main.getShaderClass();
+    this._gl = DocumentUtil.getGL();
     this.initPosBuffer();
+    this.initProgram();
   }
 
   initKBEvent() {
@@ -129,23 +129,33 @@ class Rect3D {
 
     this._posBuffer = this._gl.createBuffer();
     this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._posBuffer);
-    this._gl.bufferData(this._gl.ARRAY_BUFFER, Rect3D.getRectArr(), this._gl.STATIC_DRAW);
+    this._gl.bufferData(this._gl.ARRAY_BUFFER, Tools.getRectArr(), this._gl.STATIC_DRAW);
   }
 
-  run() {
-    if (!this._gl || !this._shaderClass) {
+  initProgram() {
+    if (!this._gl) {
       return;
     }
 
-    let program = this._shaderClass.getShaderProgram(this._gl, ShaderStr.INDEX_SHADER_3D);
+    ShaderUtil.loadShader(this._gl, ShaderUtil.INDEX_SHADER_3D, this.loadProgramSuccess.bind(this));
+  }
 
+  loadProgramSuccess(program) {
     if (!program) {
       return;
     }
-
     this._gl.useProgram(program);
+    this._program = program;
 
     this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
+    this.run();
+  }
+
+  run() {
+    if (!this._gl) {
+      return;
+    }
+
     this._gl.clearColor(0, 0 , 0, 1);
 
     // this._gl.enable(this._gl.CULL_FACE); // 背面剔除 正面三角形的顶点顺序是逆时针方向， 反面三角形是顺时针方向。
@@ -155,120 +165,28 @@ class Rect3D {
     // 计算矩阵
     let matrix = Math3D.projection(this._gl.canvas.width, this._gl.canvas.height, 400);
     matrix = Math3D.translate(matrix, this._transla[0], this._transla[1], this._transla[2]);
-    matrix = Math3D.xRotate(matrix, this._rotate[0] / Math.PI * 180);
-    matrix = Math3D.yRotate(matrix, this._rotate[1] / Math.PI * 180);
-    matrix = Math3D.zRotate(matrix, this._rotate[2] / Math.PI * 180);
+    matrix = Math3D.xRotate(matrix, Tools.degToRad(this._rotate[0]));
+    matrix = Math3D.yRotate(matrix, Tools.degToRad(this._rotate[1]));
+    matrix = Math3D.zRotate(matrix, Tools.degToRad(this._rotate[2]));
     matrix = Math3D.scale(matrix, this._scale[0], this._scale[1], this._scale[1]);
 
-    let uMatrix = this._gl.getUniformLocation(program, 'u_matrix');
+    let uMatrix = this._gl.getUniformLocation(this._program, 'u_matrix');
     // 设置矩阵
     this._gl.uniformMatrix4fv(uMatrix, false, matrix);
 
-    let aColor = this._gl.getAttribLocation(program, 'a_color');
+    let aColor = this._gl.getAttribLocation(this._program, 'a_color');
     let colorBuffer = this._gl.createBuffer();
     this._gl.bindBuffer(this._gl.ARRAY_BUFFER, colorBuffer);
-    this._gl.bufferData(this._gl.ARRAY_BUFFER, Rect3D.getColorArr(), this._gl.STATIC_DRAW);
+    this._gl.bufferData(this._gl.ARRAY_BUFFER, Tools.getColorArr(), this._gl.STATIC_DRAW);
     this._gl.enableVertexAttribArray(aColor);
     this._gl.vertexAttribPointer(aColor, 3, this._gl.UNSIGNED_BYTE, true, 0, 0);
 
-    let aPosition = this._gl.getAttribLocation(program, 'a_position');
+    let aPosition = this._gl.getAttribLocation(this._program, 'a_position');
     this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._posBuffer);
     this._gl.enableVertexAttribArray(aPosition);
     this._gl.vertexAttribPointer(aPosition, 3, this._gl.FLOAT, false, 0, 0);
 
     this._gl.drawArrays(this._gl.TRIANGLES, 0, 3 * 2 * 6);
-  }
-
-  static getColorArr() {
-    return new Uint8Array([
-      255, 0, 0,
-      255, 0, 0,
-      255, 0, 0,
-      255, 0, 0,
-      255, 0, 0,
-      255, 0, 0,
-
-      0, 255, 0,
-      0, 255, 0,
-      0, 255, 0,
-      0, 255, 0,
-      0, 255, 0,
-      0, 255, 0,
-
-      0, 0, 255,
-      0, 0, 255,
-      0, 0, 255,
-      0, 0, 255,
-      0, 0, 255,
-      0, 0, 255,
-
-      255, 255, 0,
-      255, 255, 0,
-      255, 255, 0,
-      255, 255, 0,
-      255, 255, 0,
-      255, 255, 0,
-
-      0, 255, 255,
-      0, 255, 255,
-      0, 255, 255,
-      0, 255, 255,
-      0, 255, 255,
-      0, 255, 255,
-
-      255, 0, 255,
-      255, 0, 255,
-      255, 0, 255,
-      255, 0, 255,
-      255, 0, 255,
-      255, 0, 255
-    ]);
-  }
-
-  static getRectArr() {
-    return new Float32Array([
-      0, 0, 0,
-      0,100,0,
-      100, 0, 0,
-      0,100,0,
-      100,100,0,
-      100,0,0,
-
-      0,0,0,
-      0,0,100,
-      100,0,0,
-      0,0,100,
-      100,0,100,
-      100,0,0,
-
-      0,100,0,
-      0,0,0,
-      0,0,100,
-      0,0,100,
-      0,100,100,
-      0,100,0,
-
-      100,100,0,
-      100,100,100,
-      100,0,0,
-      100,0,100,
-      100,0,0,
-      100,100,100,
-
-      0,0,100,
-      0,100,100,
-      100,100,100,
-      0,0,100,
-      100,0,100,
-      100,100,100,
-
-      0,100,0,
-      100,100,0,
-      100,100,100,
-      100,100,100,
-      0,100,100,
-      0,100,0
-    ]);
   }
 }
 

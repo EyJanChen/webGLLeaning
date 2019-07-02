@@ -1,26 +1,27 @@
-let HelloWorld_3 = (function () {
-  function HelloWorld_3() {
+class HelloWorld_3 {
+  constructor() {
     this.run();
   }
 
-  let __proto = HelloWorld_3.prototype;
-
-  __proto.run = function () {
-    let gl = main.getCvsGl();
+  run() {
+    let gl = DocumentUtil.getGL();
     if (!gl) {
       return;
     }
 
-    let shaderClass = main.getShaderClass();
-    if (!shaderClass) {
+    ShaderUtil.loadShader(gl, ShaderUtil.INDEX_SHADER_SINGL_RECT_COLOR, this.getProgramSuccess.bind(this));
+  }
+
+
+  getProgramSuccess(program) {
+    let gl = DocumentUtil.getGL();
+    if (!gl) {
       return;
     }
 
-    let program = shaderClass.getShaderProgram(gl, ShaderStr.INDEX_SHADER_SINGL_RECT_COLOR);
     if (!program) {
       return;
     }
-
     gl.useProgram(program);
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -42,9 +43,9 @@ let HelloWorld_3 = (function () {
     gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
 
     gl.drawArrays(gl.TRIANGLES, 0, 6);
-  };
+  }
 
-  __proto.getPosArr = function () {
+  getPosArr () {
     return [
       0, 0,
       200, 0,
@@ -53,9 +54,7 @@ let HelloWorld_3 = (function () {
       0, 200,
       0, 0
     ];
-  };
-
-  return HelloWorld_3;
-} ());
+  }
+}
 
 new HelloWorld_3();

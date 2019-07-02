@@ -11,11 +11,10 @@ class Texture3D {
   init(img) {
     this._img = img;
     this._transla = [0, 0, -450];
-    this._rotate = [Main.degToRad(0), Main.degToRad(0), Main.degToRad(0)];
+    this._rotate = [Tools.degToRad(0), Tools.degToRad(0), Tools.degToRad(0)];
     this._scale = [1, 1, 1];
     this._fieldOfView = 60;
-    this._gl= main.getCvsGl();
-    this._shaderClass = main.getShaderClass();
+    this._gl= DocumentUtil.getGL();
     this._rotationSpeed = 1.2;
     this._lastTime = 0;
 
@@ -27,15 +26,19 @@ class Texture3D {
   }
 
   initProgram() {
-    if (!this._gl || !this._shaderClass) {
+    if (!this._gl) {
       return;
     }
 
-    this._program = this._shaderClass.getShaderProgram(this._gl, ShaderStr.INDEX_SHADER_3D_TEXTURE);
-    if (!this._program) {
+    ShaderUtil.loadShader(this._gl, ShaderUtil.INDEX_SHADER_3D_TEXTURE, this.initScene.bind(this));
+  }
+
+  initScene(program) {
+    if (!program) {
       return;
     }
 
+    this._program = program;
     this._gl.useProgram(this._program);
 
     this._positionLoaction = this._gl.getAttribLocation(this._program, 'a_position');
@@ -55,7 +58,7 @@ class Texture3D {
     let gl = this._gl;
     this._posBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this._posBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, Main.getRectArr(), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, Tools.getRectArr(), gl.STATIC_DRAW);
   }
 
   initColorBuffer() {
@@ -66,7 +69,7 @@ class Texture3D {
     let gl = this._gl;
     this._colorBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this._colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, Main.getTextureArr(), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, Tools.getTextureArr(), gl.STATIC_DRAW);
   }
 
   initTexture() {
@@ -79,7 +82,7 @@ class Texture3D {
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
     // 是不是2的次幂
-    if (Main.isPowerOf2(this._img.width) && Main.isPowerOf2(this._img.height)) {
+    if (Tools.isPowerOf2(this._img.width) && Tools.isPowerOf2(this._img.height)) {
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, this._img);
       gl.generateMipmap(gl.TEXTURE_2D); // -> 根据原始图像创建所有的缩小级别
     } else {
@@ -119,7 +122,7 @@ class Texture3D {
     gl.uniform1i(this._textureLoaction, 0);
 
     let aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-    let matrix = Math3D.perspective(Main.degToRad(this._fieldOfView), aspect, 1, 2000);
+    let matrix = Math3D.perspective(Tools.degToRad(this._fieldOfView), aspect, 1, 2000);
     matrix = Math3D.translate(matrix, this._transla[0], this._transla[1], this._transla[2]);
     matrix = Math3D.xRotate(matrix, this._rotate[0]);
     matrix = Math3D.yRotate(matrix, this._rotate[1]);

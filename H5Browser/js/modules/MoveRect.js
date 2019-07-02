@@ -4,12 +4,12 @@ class MoveRect {
   }
 
   init() {
-    this._gl = main.getCvsGl();
+    this._gl = DocumentUtil.getGL();
     this._color = [Math.random(), Math.random(), Math.random()];
     this._posX = 0;
     this._posY = 0;
     this.initKBEvent();
-    this.run();
+    this.initProgram();
   }
 
   initKBEvent() {
@@ -42,29 +42,36 @@ class MoveRect {
     }
   }
 
+  initProgram() {
+    if (!this._gl) {
+      return;
+    }
+
+    ShaderUtil.loadShader(this._gl, ShaderUtil.INDEX_SHADER_SINGL_RECT_COLOR, this.loadProgramSuccess.bind(this));
+  }
+
+  loadProgramSuccess(program) {
+    if (!program) {
+      return;
+    }
+    this._gl.useProgram(program);
+    this._program = program;
+
+    this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
+    this.run();
+  }
+
   run() {
     if (!this._gl) {
       return;
     }
 
-    let shaderClass = main.getShaderClass();
-    if (!shaderClass) {
-      return;
-    }
-
-    let program = shaderClass.getShaderProgram(this._gl, ShaderStr.INDEX_SHADER_SINGL_RECT_COLOR);
-    if (!program) {
-      return;
-    }
-    this._gl.useProgram(program);
-
-    this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
     this._gl.clearColor(0, 0, 0, 1);
     this._gl.clear(this._gl.COLOR_BUFFER_BIT);
 
-    let uResolution = this._gl.getUniformLocation(program, 'u_resolution');
-    let aPosition = this._gl.getAttribLocation(program, 'a_position');
-    let uColor = this._gl.getUniformLocation(program, 'u_color');
+    let uResolution = this._gl.getUniformLocation(this._program, 'u_resolution');
+    let aPosition = this._gl.getAttribLocation(this._program, 'a_position');
+    let uColor = this._gl.getUniformLocation(this._program, 'u_color');
 
     this._gl.uniform2f(uResolution, this._gl.canvas.width, this._gl.canvas.height);
 

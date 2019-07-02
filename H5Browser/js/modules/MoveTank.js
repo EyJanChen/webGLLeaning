@@ -4,12 +4,12 @@ class MoveTank {
   }
 
   init() {
-    this._gl = main.getCvsGl();
+    this._gl = DocumentUtil.getGL();
     this._color = [Math.random(), Math.random(), Math.random()];
     this._posX = this._posY = 0;
     this.initKBEvent();
     this.initPosBuffer();
-    this.run();
+    this.initProgram();
   }
 
   initKBEvent() {
@@ -49,44 +49,52 @@ class MoveTank {
 
     this._posBuffer = this._gl.createBuffer();
     this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._posBuffer);
-    let rect_1 = main.getRectPosArr(0, 20, 30, 15);
-    let rect_2 = main.getRectPosArr(7, 0, 15, 20);
+    let rect_1 = Tools.getRectPosArr(0, 20, 30, 15);
+    let rect_2 = Tools.getRectPosArr(7, 0, 15, 20);
     this._gl.bufferData(this._gl.ARRAY_BUFFER, new Float32Array(rect_1.concat(rect_2)), this._gl.STATIC_DRAW);
   }
 
-  run() {
+  initProgram() {
     if (!this._gl) {
       return;
     }
 
-    let shaderClass = main.getShaderClass();
-    if (!shaderClass) {
-      return;
-    }
+    ShaderUtil.loadShader(this._gl, ShaderUtil.INDEX_SHADER_TRANSLATION_MOVE, this.loadProgramSuccess.bind(this));
+  }
 
-    let program = shaderClass.getShaderProgram(this._gl, ShaderStr.INDEX_SHADER_TRANSLATION_MOVE);
+  loadProgramSuccess(program) {
     if (!program) {
       return;
     }
     this._gl.useProgram(program);
     this._program = program;
 
+    this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
+    this.run();
+  }
+
+
+  run() {
+    if (!this._gl) {
+      return;
+    }
+
     this._gl.viewport(0,0,this._gl.canvas.width, this._gl.canvas.height);
     this._gl.clearColor(0, 0, 0, 1);
     this._gl.clear(this._gl.COLOR_BUFFER_BIT);
 
-    let uResolution = this._gl.getUniformLocation(program, 'u_resolution');
+    let uResolution = this._gl.getUniformLocation(this._program, 'u_resolution');
     this._gl.uniform2f(uResolution, this._gl.canvas.width, this._gl.canvas.height);
 
-    let uColor = this._gl.getUniformLocation(program, 'u_color');
+    let uColor = this._gl.getUniformLocation(this._program, 'u_color');
     this._gl.uniform4f(uColor, this._color[0], this._color[1], this._color[2], 1);
 
-    let uTranslation = this._gl.getUniformLocation(program, 'u_translation');
+    let uTranslation = this._gl.getUniformLocation(this._program, 'u_translation');
     this._gl.uniform2f(uTranslation, this._posX,  this._posY);
 
     this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._posBuffer);
-    this._gl.enableVertexAttribArray(this.getAPosition(program));
-    this._gl.vertexAttribPointer(this.getAPosition(program), 2, this._gl.FLOAT, false, 0, 0);
+    this._gl.enableVertexAttribArray(this.getAPosition(this._program));
+    this._gl.vertexAttribPointer(this.getAPosition(this._program), 2, this._gl.FLOAT, false, 0, 0);
     this._gl.drawArrays(this._gl.TRIANGLES, 0, 12);
   }
 

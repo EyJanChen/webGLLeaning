@@ -1,22 +1,23 @@
-let HelloWorld_4 = (function () {
-  function HelloWorld_4() {
+class HelloWorld_4 {
+  constructor() {
     this.run();
   }
 
-  let __proto = HelloWorld_4.prototype;
-
-  __proto.run = function () {
-    let gl = main.getCvsGl();
+  run() {
+    let gl = DocumentUtil.getGL();
     if (!gl) {
       return;
     }
 
-    let shaderClass = main.getShaderClass();
-    if (!shaderClass) {
+    ShaderUtil.loadShader(gl, ShaderUtil.INDEX_SHADER_SINGL_RECT_COLOR, this.getProgramSuccess.bind(this));
+  }
+
+  getProgramSuccess(program) {
+    let gl = DocumentUtil.getGL();
+    if (!gl) {
       return;
     }
 
-    let program = shaderClass.getShaderProgram(gl, ShaderStr.INDEX_SHADER_SINGL_RECT_COLOR);
     if (!program) {
       return;
     }
@@ -40,28 +41,17 @@ let HelloWorld_4 = (function () {
 
     for (let index = 0; index < 50; index++) {
       gl.uniform4f(uColor, Math.random(), Math.random(), Math.random(), 1);
-
       gl.bufferData(gl.ARRAY_BUFFER, this.getRect(this.randomInt(gl.canvas.width), this.randomInt(gl.canvas.height)), gl.STATIC_DRAW);
-
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
-    // let self = this;
-    // let intervalFunc = function () {
-    //   gl.uniform4f(uColor, Math.random(), Math.random(), Math.random(), 1);
-    //
-    //   gl.bufferData(gl.ARRAY_BUFFER, self.getRect(self.randomInt(gl.canvas.width), self.randomInt(gl.canvas.height)), gl.STATIC_DRAW);
-    //
-    //   gl.drawArrays(gl.TRIANGLES, 0, 6);
-    // };
-    // setInterval(intervalFunc, 10);
 
-  };
+  }
 
-  __proto.randomInt = function (num) {
+  randomInt (num) {
     return Math.floor(Math.random() * num);
   };
 
-  __proto.getRect = function (w, h) {
+  getRect (w, h) {
     let x = this.randomInt(w);
     let y = this.randomInt(h);
     let x1 = x;
@@ -77,10 +67,7 @@ let HelloWorld_4 = (function () {
       x2, y2,
     ]);
   };
-
-  return HelloWorld_4;
-}());
-
+}
 new HelloWorld_4();
 
 /*

@@ -1,22 +1,23 @@
-let HelloWorld_2  = (function () {
-  function HelloWorld_2 () {
+class HelloWorld_2 {
+  constructor() {
     this.run();
   }
 
-  let __proto = HelloWorld_2.prototype;
-
-  __proto.run = function () {
-    let gl = main.getCvsGl();
+  run () {
+    let gl = DocumentUtil.getGL();
     if (!gl) {
       return;
     }
 
-    let shaderClass = main.getShaderClass();
-    if (!shaderClass) {
+    ShaderUtil.loadShader(gl, ShaderUtil.INDEX_SHADER_TRIANGLES_ZERO_POINT, this.getProgramSuccess.bind(this));
+  }
+
+  getProgramSuccess (program) {
+    let gl = DocumentUtil.getGL();
+    if (!gl) {
       return;
     }
 
-    let program = shaderClass.getShaderProgram(gl, ShaderStr.INDEX_SHADER_TRIANGLES_ZERO_POINT);
     if (!program) {
       return;
     }
@@ -38,9 +39,9 @@ let HelloWorld_2  = (function () {
     gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
 
     gl.drawArrays(gl.TRIANGLES, 0, 6);
-  };
+  }
 
-  __proto.getPosArr = function () {
+  getPosArr () {
     return [
       0, 0,
       180, 0,
@@ -50,8 +51,6 @@ let HelloWorld_2  = (function () {
       360, 180
     ];
   };
-
-  return HelloWorld_2;
-}());
+}
 
 new HelloWorld_2();
